@@ -44,6 +44,16 @@ const app = {
     },
     handleEvents: function(){
         const _this = this
+
+        //rotate CD when play / stop
+        const cdThumbAnimate = cdThumb.animate([
+            {transform: 'rotate(360deg)'}
+        ],{
+            duration: 50000,
+            iteration: Infinity 
+        })
+        cdThumbAnimate.pause()
+
         //set width,height of cd img when scrolling
         const cdWidth = cd.offsetWidth
         document.onscroll = function(){
@@ -66,12 +76,16 @@ const app = {
             _this.isPlaying = true
             audio.volume = 0.1
             player.classList.add(`playing`)
+            //rotate CD
+            cdThumbAnimate.play()
         }
         //handle pause
         audio.onpause = function(){
             _this.isPlaying = false
             audio.volume = 0.1
             player.classList.remove(`playing`)
+            //rotate CD
+            cdThumbAnimate.pause()
         }
         // update the progress bar 
         audio.ontimeupdate = function(){
@@ -89,9 +103,7 @@ const app = {
             const seekTime = e.target.value / 100 * audio.duration;
             audio.currentTime = seekTime;
             _this.isSeeking = false; // 
-        }
-        
-        
+        }  
     },
     loadCurSong: function(){
         heading.textContent = this.curSong.name
