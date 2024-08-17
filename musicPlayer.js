@@ -13,11 +13,15 @@ const playBtn = $('.btn-toggle-play')
 const progress = $('#progress')
 const nextBtn = $('.btn-next')
 const prevBtn = $('.btn-prev')
+const randomBtn = $('.btn-random')
+
+audio.volume = 0.05
 
 const app = {
     curIndex: 0,
     isPlaying: false,
     isSeeking: false,
+    isRandom: false,
     songs,
     render: function(){
         const htmls = this.songs.map(function(song){
@@ -76,7 +80,6 @@ const app = {
         //handle play
         audio.onplay = function(){
             _this.isPlaying = true
-            audio.volume = 0.1
             player.classList.add(`playing`)
             //rotate CD
             cdThumbAnimate.play()
@@ -84,7 +87,6 @@ const app = {
         //handle pause
         audio.onpause = function(){
             _this.isPlaying = false
-            audio.volume = 0.1
             player.classList.remove(`playing`)
             //rotate CD
             cdThumbAnimate.pause()
@@ -109,12 +111,26 @@ const app = {
         
         //handle next/prev btn
         nextBtn.onclick = function(){
-            _this.nextSong()
+            if(_this.isRandom){
+                _this.playRandom()
+            }else{
+                _this.nextSong()
+            }  
             audio.play()
         }
         prevBtn.onclick = function(){
-            _this.prevSong()
+            if(_this.isRandom){
+                _this.playRandom()
+            }else{
+                _this.prevSong()
+            }            
             audio.play()
+        }
+
+        //handle random next song
+        randomBtn.onclick = function(){
+            _this.isRandom = !_this.isRandom
+            randomBtn.classList.toggle('active',_this.isRandom)
         }
     },
     loadCurSong: function(){
@@ -134,6 +150,14 @@ const app = {
         if(this.curIndex < 0 ){
             this.curIndex = this.songs.length - 1
         }
+        this.loadCurSong()
+    },
+    playRandom: function(){
+        let newIndex
+        do {
+            newIndex = Math.floor(Math.random() * this.songs.length) 
+        } while (newIndex === this.currentIndex)
+            this.curIndex = newIndex
         this.loadCurSong()
     },
     start: function(){
