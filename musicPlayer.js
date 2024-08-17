@@ -11,6 +11,8 @@ const cdThumb = $('.cd-thumb')
 const audio = $('#audio')
 const playBtn = $('.btn-toggle-play')
 const progress = $('#progress')
+const nextBtn = $('.btn-next')
+const prevBtn = $('.btn-prev')
 
 const app = {
     curIndex: 0,
@@ -103,12 +105,36 @@ const app = {
             const seekTime = e.target.value / 100 * audio.duration;
             audio.currentTime = seekTime;
             _this.isSeeking = false; // 
-        }  
+        }
+        
+        //handle next/prev btn
+        nextBtn.onclick = function(){
+            _this.nextSong()
+            audio.play()
+        }
+        prevBtn.onclick = function(){
+            _this.prevSong()
+            audio.play()
+        }
     },
     loadCurSong: function(){
         heading.textContent = this.curSong.name
         cdThumb.style.backgroundImage = `url('${this.curSong.image}')`
         audio.src = this.curSong.path
+    },
+    nextSong: function () {
+        this.curIndex++
+        if(this.curIndex >= this.songs.length){
+            this.curIndex = 0
+        }
+        this.loadCurSong()
+    },
+    prevSong: function () {
+        this.curIndex--
+        if(this.curIndex < 0 ){
+            this.curIndex = this.songs.length - 1
+        }
+        this.loadCurSong()
     },
     start: function(){
         //dinh nghia cac thuoc tinh cho obj
