@@ -14,6 +14,7 @@ const progress = $('#progress')
 const nextBtn = $('.btn-next')
 const prevBtn = $('.btn-prev')
 const randomBtn = $('.btn-random')
+const repeatBtn = $('.btn-repeat')
 
 audio.volume = 0.05
 
@@ -22,6 +23,7 @@ const app = {
     isPlaying: false,
     isSeeking: false,
     isRandom: false,
+    isRepeat: false,
     songs,
     render: function(){
         const htmls = this.songs.map(function(song){
@@ -128,10 +130,27 @@ const app = {
         }
 
         //handle random next song
+        //problem: make the posibility of next song equal
         randomBtn.onclick = function(){
             _this.isRandom = !_this.isRandom
             randomBtn.classList.toggle('active',_this.isRandom)
         }
+
+        // next/ repeat song when the audio is finished
+        //repeat song when finish
+        repeatBtn.onclick = function(){
+            _this.isRepeat = !_this.isRepeat
+            repeatBtn.classList.toggle('active',_this.isRepeat)
+        }
+        //next song when finish
+        audio.onended = function(){
+            if(_this.isRepeat){
+                audio.play()
+            }else{
+                nextBtn.click()
+            }
+        }
+
     },
     loadCurSong: function(){
         heading.textContent = this.curSong.name
