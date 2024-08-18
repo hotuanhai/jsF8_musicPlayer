@@ -26,9 +26,9 @@ const app = {
     isRepeat: false,
     songs,
     render: function(){
-        const htmls = this.songs.map(function(song){
+        const htmls = this.songs.map((song,index) => {
             return`
-                <div class="song">
+                <div class="song ${index === this.curIndex ? 'active' : ''}" data-index="${index}">
                     <div class="thumb" style="background-image: url('${song.image}')">
                     </div>
                     <div class="body">
@@ -152,10 +152,31 @@ const app = {
         }
 
     },
+    scrollToActiveSong: function(){
+        //bug: cant see element hidden by dashboard
+        setTimeout(()=>{
+            $('.song.active').scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            })
+        },50)
+    },
     loadCurSong: function(){
         heading.textContent = this.curSong.name
         cdThumb.style.backgroundImage = `url('${this.curSong.image}')`
         audio.src = this.curSong.path
+
+        //add active class to curSong
+        const prevActive = $('.song.active')
+        if (prevActive) {
+            prevActive.classList.remove('active')
+        }
+        const newActive = $(`.song[data-index="${this.curIndex}"]`)
+        if (newActive) {
+            newActive.classList.add('active')
+        }
+        //scroll To Active Song : scroll into view
+        this.scrollToActiveSong()
     },
     nextSong: function () {
         this.curIndex++
