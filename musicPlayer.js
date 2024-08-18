@@ -151,6 +151,21 @@ const app = {
             }
         }
 
+        //handle click to chose song
+        playlist.onclick = function(e){
+            //check if click in '.song' area
+            const songNode = e.target.closest('.song:not(.active)')
+            if(songNode || e.target.closest('.option')){
+                if(songNode){
+                    _this.curIndex = songNode.getAttribute('data-index')
+                    _this.loadCurSong()
+                    audio.play()
+                }
+                if(e.target.closest('.option')){
+                    
+                }
+            }
+        }
     },
     scrollToActiveSong: function(){
         //bug: cant see element hidden by dashboard
