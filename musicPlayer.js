@@ -3,6 +3,8 @@ import songs from './assets/songsList/songs.js'
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
 
+const PLAYER_STORAGE_KEY = 'F8_PLAYER'
+
 const player = $('.player')
 const playlist = $('.playlist')
 const cd = $('.cd')
@@ -24,7 +26,12 @@ const app = {
     isSeeking: false,
     isRandom: false,
     isRepeat: false,
+    config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
     songs,
+    setConfig: function(key,value){
+        this.config[key] = value
+        localStorage.setItem(PLAYER_STORAGE_KEY,JSON.stringify(this.config))
+    },
     render: function(){
         const htmls = this.songs.map((song,index) => {
             return`
@@ -134,6 +141,9 @@ const app = {
         randomBtn.onclick = function(){
             _this.isRandom = !_this.isRandom
             randomBtn.classList.toggle('active',_this.isRandom)
+
+            //update state in local storage
+            _this.setConfig('isRandom',_this.isRandom)
         }
 
         // next/ repeat song when the audio is finished
@@ -141,6 +151,9 @@ const app = {
         repeatBtn.onclick = function(){
             _this.isRepeat = !_this.isRepeat
             repeatBtn.classList.toggle('active',_this.isRepeat)
+
+            //update state in local storage
+            _this.setConfig('isRepeat',_this.isRepeat)
         }
         //next song when finish
         audio.onended = function(){
@@ -193,6 +206,13 @@ const app = {
         //scroll To Active Song : scroll into view
         this.scrollToActiveSong()
     },
+    loadConfig: function(){
+        this.isRandom = this.config.isRandom
+        this.isRepeat = this.config.isRepeat
+        //set config
+        randomBtn.classList.toggle('active',this.isRandom)
+        repeatBtn.classList.toggle('active',this.isRepeat)
+    },
     nextSong: function () {
         this.curIndex++
         if(this.curIndex >= this.songs.length){
@@ -219,11 +239,16 @@ const app = {
         //dinh nghia cac thuoc tinh cho obj
         this.defineProperties()
 
+        //load the state of israndom, isrepeat
+        this.loadConfig()
+
         this.handleEvents()
         
         this.loadCurSong()
         
         this.render()
+
+        
     }
 }
 app.start()
