@@ -18,6 +18,7 @@ const nextBtn = $('.btn-next')
 const prevBtn = $('.btn-prev')
 const randomBtn = $('.btn-random')
 const repeatBtn = $('.btn-repeat')
+const dashboard = $('.dashboard')
 
 audio.volume = 0.05
 
@@ -195,13 +196,24 @@ const app = {
         }
     },
     scrollToActiveSong: function(){
-        //bug: cant see element hidden by dashboard
         setTimeout(()=>{
             $('.song.active').scrollIntoView({
                 behavior: 'smooth',
                 block: 'nearest'
             })
+            // see element hidden by dashboard
+            const dashboardBottom = dashboard.getBoundingClientRect().bottom
+            const activeSongTop = $('.song.active').getBoundingClientRect().bottom - $('.song.active').offsetHeight
+            console.log( activeSongTop - dashboardBottom)
+            if(activeSongTop < dashboardBottom){
+               window.scrollBy({
+                    behavior: "smooth",
+                    top:- dashboardBottom + activeSongTop - 200 ,
+                    
+                })
+            }
         },50)
+        
     },
     loadCurSong: function(){
         heading.textContent = this.curSong.name
@@ -248,7 +260,7 @@ const app = {
         if(!this.randomArr || this.randomArr.length === 0){
             this.randomArr = generateRandomArray(this.songs.length,this.curIndex)
         }   
-        console.log(this.randomArrCurIndex)
+        // console.log(this.randomArrCurIndex)
         this.curIndex = this.randomArr[this.randomArrCurIndex]
         this.loadCurSong()
     },
@@ -261,11 +273,9 @@ const app = {
 
         this.handleEvents()
         
-        this.loadCurSong()
-        
         this.render()
 
-        
+        this.loadCurSong()    
     }
 }
 app.start()
