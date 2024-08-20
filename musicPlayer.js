@@ -1,4 +1,5 @@
 import songs from './assets/songsList/songs.js'
+import generateRandomArray from './utils.js'
 
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
@@ -26,6 +27,8 @@ const app = {
     isSeeking: false,
     isRandom: false,
     isRepeat: false,
+    randomArr: [],
+    randomArrCurIndex: 0,
     config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
     songs,
     setConfig: function(key,value){
@@ -121,6 +124,11 @@ const app = {
         //handle next/prev btn
         nextBtn.onclick = function(){
             if(_this.isRandom){
+                if(_this.randomArrCurIndex === (_this.songs.length - 1)){
+                    _this.randomArrCurIndex = 0
+                }else{
+                    _this.randomArrCurIndex++
+                }                
                 _this.playRandom()
             }else{
                 _this.nextSong()
@@ -129,6 +137,11 @@ const app = {
         }
         prevBtn.onclick = function(){
             if(_this.isRandom){
+                if(_this.randomArrCurIndex === 0){
+                    _this.randomArrCurIndex = (_this.songs.length - 1)
+                }else{
+                    _this.randomArrCurIndex--
+                }   
                 _this.playRandom()
             }else{
                 _this.prevSong()
@@ -142,6 +155,8 @@ const app = {
             _this.isRandom = !_this.isRandom
             randomBtn.classList.toggle('active',_this.isRandom)
 
+            //reset the random songs list if randomBtn is double clicked   
+            if(!_this.isRepeat){_this.randomArr = []}
             //update state in local storage
             _this.setConfig('isRandom',_this.isRandom)
         }
@@ -169,13 +184,12 @@ const app = {
             //check if click in '.song' area
             const songNode = e.target.closest('.song:not(.active)')
             if(songNode || e.target.closest('.option')){
-                if(songNode){
+                if(songNode && !e.target.closest('.option')){
                     _this.curIndex = songNode.getAttribute('data-index')
                     _this.loadCurSong()
                     audio.play()
                 }
                 if(e.target.closest('.option')){
-                    
                 }
             }
         }
@@ -228,11 +242,14 @@ const app = {
         this.loadCurSong()
     },
     playRandom: function(){
-        let newIndex
-        do {
-            newIndex = Math.floor(Math.random() * this.songs.length) 
-        } while (newIndex === this.currentIndex)
-            this.curIndex = newIndex
+        //randomArr contain the indexes of songs not in order 
+        //ex [5,2,1,0,3]
+        //randomArrCurIndex is the current index of random arr
+        if(!this.randomArr || this.randomArr.length === 0){
+            this.randomArr = generateRandomArray(this.songs.length,this.curIndex)
+        }   
+        console.log(this.randomArrCurIndex)
+        this.curIndex = this.randomArr[this.randomArrCurIndex]
         this.loadCurSong()
     },
     start: function(){
