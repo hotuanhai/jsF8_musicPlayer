@@ -229,12 +229,16 @@ const app = {
         if (newActive) {
             newActive.classList.add('active')
         }
+
+        //set the current song to config
+        this.setConfig('curIndex',this.curIndex)
         //scroll To Active Song : scroll into view
         this.scrollToActiveSong()
     },
     loadConfig: function(){
         this.isRandom = this.config.isRandom
         this.isRepeat = this.config.isRepeat
+        this.curIndex = this.config.curIndex
         //set config
         randomBtn.classList.toggle('active',this.isRandom)
         repeatBtn.classList.toggle('active',this.isRepeat)
