@@ -19,8 +19,14 @@ const prevBtn = $('.btn-prev')
 const randomBtn = $('.btn-random')
 const repeatBtn = $('.btn-repeat')
 const dashboard = $('.dashboard')
-
-audio.volume = 0.05
+//volume
+const volumeBtn = $('.btn-volume')
+const volumeBar = $('#volume-bar')
+const volumeBarContainer = $('.volumeBar-container')
+const iconVolumeOff = $('.fa-volume-off')
+const iconVolumeLow = $('.fa-volume-low')
+const iconVolumeHigh = $('.fa-volume-high')
+// audio.volume = 0.05
 
 const app = {
     curIndex: 0,
@@ -30,6 +36,7 @@ const app = {
     isRepeat: false,
     randomArr: [],
     randomArrCurIndex: 0,
+    volume: 0.05,
     config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
     songs,
     setConfig: function(key,value){
@@ -58,6 +65,15 @@ const app = {
         Object.defineProperty(this,'curSong',{
             get : function(){
                 return this.songs[this.curIndex]
+            }
+        }),
+        Object.defineProperty(this,'volume',{
+            get : function(){
+                return audio.volume
+            },
+            set: function(value) {
+                audio.volume = value;
+                this.setConfig('volume', value);
             }
         })
     },
@@ -194,6 +210,30 @@ const app = {
                 }
             }
         }
+
+        //handle volume
+        volumeBtn.onclick = function(){
+            volumeBarContainer.classList.add('active')
+            console.log(`${dashboard.getBoundingClientRect().bottom - 100} ` +'px')
+            volumeBarContainer.style.top = `${dashboard.getBoundingClientRect().bottom - 158}` +'px'
+        }
+        document.onclick = function(e) {
+            const isClickInside = volumeBtn.contains(e.target) || volumeBarContainer.contains(e.target);
+            if (!isClickInside) {
+                volumeBarContainer.classList.remove('active');
+            }
+        }
+        document.addEventListener('scroll', function(){
+            volumeBarContainer.classList.remove('active')
+        })
+
+        volumeBar.oninput = function(e) {
+            _this.volume = e.target.value / 100; 
+            //set the volume to config
+            _this.setConfig('volume',_this.volume)
+            //set the icon of volume
+            _this.loadCurVolumeIcon()
+        }
     },
     scrollToActiveSong: function(){
         setTimeout(()=>{
@@ -204,7 +244,7 @@ const app = {
             // see element hidden by dashboard
             const dashboardBottom = dashboard.getBoundingClientRect().bottom
             const activeSongTop = $('.song.active').getBoundingClientRect().bottom - $('.song.active').offsetHeight
-            console.log( activeSongTop - dashboardBottom)
+
             if(activeSongTop < dashboardBottom){
                window.scrollBy({
                     behavior: "smooth",
@@ -232,13 +272,39 @@ const app = {
 
         //set the current song to config
         this.setConfig('curIndex',this.curIndex)
+        
         //scroll To Active Song : scroll into view
         this.scrollToActiveSong()
     },
+    loadCurVolumeIcon: function(){
+        //set the icon of volume
+        const curVolumeIcon = $('.btn-volume .active:not(.volumeBar-container)')
+        if(this.volume < 0.11){
+            if(curVolumeIcon !== iconVolumeOff){
+                curVolumeIcon.classList.remove('active')
+                iconVolumeOff.classList.add('active')
+            }
+        }else if(this.volume > 0.89){
+            if(curVolumeIcon !== iconVolumeHigh){
+                curVolumeIcon.classList.remove('active')
+                iconVolumeHigh.classList.add('active')
+            }
+        }else{
+            if(curVolumeIcon !== iconVolumeLow){
+                curVolumeIcon.classList.remove('active')
+                iconVolumeLow.classList.add('active')
+            }
+        }
+    },
     loadConfig: function(){
-        this.isRandom = this.config.isRandom
+        this.isRandom = this.config.isRandom 
         this.isRepeat = this.config.isRepeat
-        this.curIndex = this.config.curIndex
+        this.curIndex = this.config.curIndex ? this.config.curIndex : 0
+        //handle volume
+        this.volume = this.config.volume ? this.config.volume : 0.05
+        volumeBar.value = this.volume * 100
+        this.loadCurVolumeIcon()
+
         //set config
         randomBtn.classList.toggle('active',this.isRandom)
         repeatBtn.classList.toggle('active',this.isRepeat)

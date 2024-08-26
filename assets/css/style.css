@@ -186,3 +186,68 @@
     font-size: 18px;
   }
   
+  /* volume */
+.fa-volume-off,
+.fa-volume-low,
+.fa-volume-high {
+    display: none;
+}
+
+.btn-volume .active{
+  display: inline-block;
+}
+
+.volumeBar-container {
+  position: absolute;
+  top: 240px;
+  right: 422px;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 80px; /* Adjust the height to match the volume bar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
+}
+.volumeBar-container .active{
+  display: block;
+}
+.volume-bar {
+  width: 80px; /* Adjust the width to match the new height of the container */
+  -webkit-appearance: none;
+  appearance: none;
+  transform: rotate(-90deg); /* Rotate the slider */
+  transform-origin: 50% 50%; /* Keep the origin centered */
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  height: 6px; /* Adjust the thickness of the slider */
+  cursor: pointer;
+}
+
+.volume-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px; /* Size of the thumb */
+  background-color: var(--primary-color, #080a08);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+}
+
+.volume-bar::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background-color: var(--primary-color, #080a08);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-bar::-ms-thumb {
+  width: 12px;
+  height: 12px;
+  background-color: var(--primary-color, #080a08);
+  border-radius: 50%;
+  cursor: pointer;
+}
