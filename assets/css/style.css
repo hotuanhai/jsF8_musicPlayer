@@ -132,7 +132,7 @@
     margin-top: 408px;
     padding: 12px;
   }
-  
+
   .song {
     display: flex;
     align-items: center;
@@ -185,14 +185,54 @@
     color: #999;
     font-size: 18px;
   }
-  
+  /* album  */
+  .albumList{
+    position: absolute;
+    top: 240px;
+    right: -10px;
+    display: none;
+  }
+  .albumList.active{
+    display: inline-block;
+  }
+  .album{
+    display: flex;
+    align-items: center;
+    margin-bottom: 1px;
+    background-color: #fff;
+    padding: 2px 8px;
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  .albumOption{
+    position: absolute;
+    top: 240px;
+    right: -300px;
+    font-size: medium;
+    display: none;   
+  }
+  .albumOption.active{
+    display: inline-block;
+  }
+  .albumOption.active div{
+    display: flex;
+    align-items: center;
+    margin-bottom: 1px;
+    background-color: #fff;
+    padding: 2px 8px;
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
   /* volume */
 .fa-volume-off,
 .fa-volume-low,
 .fa-volume-high {
     display: none;
 }
-
+.btn-volume{
+  width: 40px;
+  padding: 15px;
+}
 .btn-volume .active{
   display: inline-block;
 }

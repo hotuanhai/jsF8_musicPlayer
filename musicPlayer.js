@@ -1,5 +1,6 @@
 import songs from './assets/songsList/songs.js'
 import generateRandomArray from './utils.js'
+import getAllAlbums,{getAllAlbumsName,deleteAlbum} from './controller/albumController.js'
 
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
@@ -26,7 +27,10 @@ const volumeBarContainer = $('.volumeBar-container')
 const iconVolumeOff = $('.fa-volume-off')
 const iconVolumeLow = $('.fa-volume-low')
 const iconVolumeHigh = $('.fa-volume-high')
-// audio.volume = 0.05
+// album
+const albumMenuBtn = $('.btn-albumMenu')
+const albumList = $('.albumList')
+const albumOption = $('.albumOption')
 
 const app = {
     curIndex: 0,
@@ -36,6 +40,8 @@ const app = {
     isRepeat: false,
     randomArr: [],
     randomArrCurIndex: 0,
+    curAlbumName: 'All song',
+    curAlbumlist:[],
     volume: 0.05,
     config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
     songs,
@@ -61,6 +67,21 @@ const app = {
         })
         playlist.innerHTML = htmls.join('')
     },
+    renderAlbumsName:async function(){
+        const albums = await getAllAlbums() 
+        const html = `  <div class="album">
+                            <div> All song </div>
+                        </div>`
+        albumList.innerHTML =  html             
+        const htmls = albums.map((album,index) => {
+            return`
+                <div class="album">
+                    <div> ${album.name} </div>
+                </div>
+            `
+        })
+        albumList.innerHTML += htmls.join('')
+    },
     defineProperties: function(){
         Object.defineProperty(this,'curSong',{
             get : function(){
@@ -75,7 +96,12 @@ const app = {
                 audio.volume = value;
                 this.setConfig('volume', value);
             }
-        })
+        })//,
+        // Object.defineProperty(this, 'albumsName', {
+        //     get: function() {
+        //         return getAllAlbumsName().then(names => names);
+        //     }
+        // })
     },
     handleEvents: function(){
         const _this = this
@@ -214,15 +240,19 @@ const app = {
         //handle volume
         volumeBtn.onclick = function(){
             volumeBarContainer.classList.add('active')
+            // volumeBarContainer.focus()
             console.log(`${dashboard.getBoundingClientRect().bottom - 100} ` +'px')
             volumeBarContainer.style.top = `${dashboard.getBoundingClientRect().bottom - 158}` +'px'
         }
-        document.onclick = function(e) {
+        // volumeBarContainer.onblur = function(){
+        //     volumeBarContainer.classList.remove('active')
+        // }
+        document.addEventListener('click', function(e) {
             const isClickInside = volumeBtn.contains(e.target) || volumeBarContainer.contains(e.target);
             if (!isClickInside) {
                 volumeBarContainer.classList.remove('active');
             }
-        }
+        })
         document.addEventListener('scroll', function(){
             volumeBarContainer.classList.remove('active')
         })
@@ -234,6 +264,56 @@ const app = {
             //set the icon of volume
             _this.loadCurVolumeIcon()
         }
+
+        //handle album
+        albumMenuBtn.onclick = async function() {
+            await _this.renderAlbumsName()
+        
+            albumList.classList.add('active')
+            // Wait for the next animation frame to ensure rendering is complete
+            await new Promise(requestAnimationFrame) 
+        
+            // fix the css
+            const albumWidth = albumList.getBoundingClientRect().width
+            const albumHeight = albumList.getBoundingClientRect().height
+            const dashboardBottom = dashboard.getBoundingClientRect().bottom
+            albumList.style.top = `${dashboardBottom - albumHeight/2 - 50}px`
+            albumList.style.right = `-${albumWidth}px`
+        }
+
+        albumList.onclick = function(e) {
+            const album = e.target.closest('.album')
+            if (album) {
+                albumOption.classList.add(`active`) 
+                albumOption.setAttribute('parent', album.innerText)
+                const albumBottom = album.getBoundingClientRect().bottom
+                const albumRight = album.getBoundingClientRect().right
+                const albumWidth = album.getBoundingClientRect().width
+                const albumHeight = album.getBoundingClientRect().height
+                const dashboardRight = dashboard.getBoundingClientRect().right
+                albumOption.style.right =` -${albumRight - dashboardRight + albumWidth +16}px`
+                albumOption.style.top = `${albumBottom - albumHeight*1.5}px`
+            }
+        }
+        albumOption.onclick = function(e){
+            console.log(albumOption.getAttribute('parent'))
+            if(e.target.innerText === 'Chọn album'){        
+                _this.handleChosingAlbum(albumOption.getAttribute('parent'))
+            }else if(e.target.innerText === 'Xóa album'){
+                _this.handleDeleteAlbum(albumOption.getAttribute('parent'))
+            }
+            
+        }
+        document.addEventListener('click', function(e) {
+            if (!albumList.contains(e.target) && !albumMenuBtn.contains(e.target)) {
+                albumList.classList.remove('active')
+                albumOption.classList.remove('active') 
+            }
+        });
+        document.addEventListener('scroll', function() {
+            albumList.classList.remove('active')
+            albumOption.classList.remove('active') 
+        })
     },
     scrollToActiveSong: function(){
         setTimeout(()=>{
@@ -333,6 +413,22 @@ const app = {
         // console.log(this.randomArrCurIndex)
         this.curIndex = this.randomArr[this.randomArrCurIndex]
         this.loadCurSong()
+    },
+    // handle album
+    handleDeleteAlbum: async function(name){
+        const albums = await getAllAlbums()
+        const albumToDelete = albums.find(album => album.name === name)
+        if (albumToDelete) {
+            const albumId = albumToDelete.id;
+            deleteAlbum(albumId)
+        }else{
+            alert('Không thể xóa mọi bài hát')
+        }
+    },
+    handleChosingAlbum: async function(name){
+        const albums = await getAllAlbums()
+        const albumToChose = albums.find(album => album.name === name)
+        this.curAlbumlist = albumToChose.songlist
     },
     start: function(){
         //dinh nghia cac thuoc tinh cho obj
