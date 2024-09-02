@@ -1,5 +1,5 @@
 import songs from './assets/songsList/songs.js'
-import generateRandomArray from './utils.js'
+import generateRandomArray , {shuffleArray} from './utils.js'
 import getAllAlbums,{getAllAlbumsName,deleteAlbum} from './controller/albumController.js'
 
 const $ = document.querySelector.bind(document)
@@ -41,7 +41,7 @@ const app = {
     randomArr: [],
     randomArrCurIndex: 0,
     curAlbumName: 'All song',
-    curAlbumlist:[],
+    curAlbumList:[],
     volume: 0.05,
     config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
     songs,
@@ -50,20 +50,24 @@ const app = {
         localStorage.setItem(PLAYER_STORAGE_KEY,JSON.stringify(this.config))
     },
     render: function(){
+        // let i = this.curAlbumList.length !== 0 ? this.curAlbumList[0] : 0
         const htmls = this.songs.map((song,index) => {
-            return`
-                <div class="song ${index === this.curIndex ? 'active' : ''}" data-index="${index}">
-                    <div class="thumb" style="background-image: url('${song.image}')">
+            if(this.curAlbumList.length === 0 || this.curAlbumList.includes(index)){
+                return`
+                    <div class="song ${index === this.curIndex ? 'active' : ''}" data-index="${index}">
+                        <div class="thumb" style="background-image: url('${song.image}')">
+                        </div>
+                        <div class="body">
+                            <h3 class="title">${song.name}</h3>
+                            <p class="author">${song.singer}</p>
+                        </div>
+                        <div class="option">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </div>
                     </div>
-                    <div class="body">
-                        <h3 class="title">${song.name}</h3>
-                        <p class="author">${song.singer}</p>
-                    </div>
-                    <div class="option">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </div>
-                </div>
-            `
+                `
+            }
+            
         })
         playlist.innerHTML = htmls.join('')
     },
@@ -166,8 +170,15 @@ const app = {
         
         //handle next/prev btn
         nextBtn.onclick = function(){
-            if(_this.isRandom){
+            if(_this.isRandom && _this.curAlbumName == 'All song'){
                 if(_this.randomArrCurIndex === (_this.songs.length - 1)){
+                    _this.randomArrCurIndex = 0
+                }else{
+                    _this.randomArrCurIndex++
+                }                
+                _this.playRandom()
+            }else if(_this.isRandom && _this.curAlbumName != 'All song'){
+                if(_this.randomArrCurIndex === (_this.curAlbumList.length - 1)){
                     _this.randomArrCurIndex = 0
                 }else{
                     _this.randomArrCurIndex++
@@ -176,15 +187,23 @@ const app = {
             }else{
                 _this.nextSong()
             }  
+            
             audio.play()
         }
         prevBtn.onclick = function(){
-            if(_this.isRandom){
+            if(_this.isRandom && _this.curAlbumName == 'All song'){
                 if(_this.randomArrCurIndex === 0){
                     _this.randomArrCurIndex = (_this.songs.length - 1)
                 }else{
                     _this.randomArrCurIndex--
                 }   
+                _this.playRandom()
+            }else if(_this.isRandom && _this.curAlbumName != 'All song'){
+                if(_this.randomArrCurIndex === 0){
+                    _this.randomArrCurIndex = (_this.curAlbumList.length - 1)
+                }else{
+                    _this.randomArrCurIndex--
+                }                
                 _this.playRandom()
             }else{
                 _this.prevSong()
@@ -296,7 +315,7 @@ const app = {
             }
         }
         albumOption.onclick = function(e){
-            console.log(albumOption.getAttribute('parent'))
+            //console.log(albumOption.getAttribute('parent'))
             if(e.target.innerText === 'Chọn album'){        
                 _this.handleChosingAlbum(albumOption.getAttribute('parent'))
             }else if(e.target.innerText === 'Xóa album'){
@@ -390,28 +409,58 @@ const app = {
         repeatBtn.classList.toggle('active',this.isRepeat)
     },
     nextSong: function () {
-        this.curIndex++
-        if(this.curIndex >= this.songs.length){
-            this.curIndex = 0
+        if(this.curAlbumList.length == 0){
+            this.curIndex++
+            if(this.curIndex >= this.songs.length){
+                this.curIndex = 0
+            }
+        }else{
+            let albumIndex = this.curAlbumList.indexOf(this.curIndex)
+            console.log(albumIndex,this.curIndex,this.curAlbumList)
+            if(albumIndex >= this.curAlbumList.length - 1){
+                this.curIndex = this.curAlbumList[0]
+            }else{
+                this.curIndex = this.curAlbumList[++albumIndex]
+            }
         }
+        // handle the next index if chosing album
         this.loadCurSong()
     },
     prevSong: function () {
-        this.curIndex--
-        if(this.curIndex < 0 ){
-            this.curIndex = this.songs.length - 1
+        if(this.curAlbumList.length == 0){
+            this.curIndex--
+            if(this.curIndex < 0 ){
+                this.curIndex = this.songs.length - 1
+            }
+        }else{
+            let albumIndex = this.curAlbumList.indexOf(this.curIndex)
+            if(albumIndex <= 0 ){
+                this.curIndex = this.curAlbumList[this.curAlbumList.length - 1]
+            }else{
+                this.curIndex = this.curAlbumList[--albumIndex]
+            }
         }
+        
         this.loadCurSong()
     },
     playRandom: function(){
         //randomArr contain the indexes of songs not in order 
         //ex [5,2,1,0,3]
         //randomArrCurIndex is the current index of random arr
-        if(!this.randomArr || this.randomArr.length === 0){
+        if(this.curAlbumName == 'All song'){
+            if(!this.randomArr || this.randomArr.length === 0){
             this.randomArr = generateRandomArray(this.songs.length,this.curIndex)
-        }   
-        // console.log(this.randomArrCurIndex)
-        this.curIndex = this.randomArr[this.randomArrCurIndex]
+            }   
+            // console.log(this.randomArrCurIndex)
+            this.curIndex = this.randomArr[this.randomArrCurIndex]
+        }else{
+            if(!this.randomArr || this.randomArr.length === 0){
+                this.randomArr = shuffleArray([...this.curAlbumList],this.curAlbumList[0])
+            }   
+            // console.log(this.randomArrCurIndex)
+            this.curIndex = this.randomArr[this.randomArrCurIndex]
+        }
+
         this.loadCurSong()
     },
     // handle album
@@ -426,9 +475,25 @@ const app = {
         }
     },
     handleChosingAlbum: async function(name){
-        const albums = await getAllAlbums()
-        const albumToChose = albums.find(album => album.name === name)
-        this.curAlbumlist = albumToChose.songlist
+        if(this.curAlbumName != name){
+            const albums = await getAllAlbums()
+            const albumToChose = albums.find(album => album.name === name)
+            if(albumToChose){
+                this.curAlbumList = albumToChose.songlist
+                this.curAlbumName = name
+                this.curIndex = this.curAlbumList[0]
+            }else{
+                this.curAlbumList = []
+                this.curAlbumName = 'All song'
+                this.curIndex = 0
+            }
+            this.randomArr = []
+            this.randomArrCurIndex = 0
+            
+            this.render()
+            this.loadCurSong()  
+            audio.play()
+        }
     },
     start: function(){
         //dinh nghia cac thuoc tinh cho obj
