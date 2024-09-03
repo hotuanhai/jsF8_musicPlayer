@@ -3,7 +3,7 @@
     {
       "id": "1",
       "name": "1st album",
-      "songlist": [
+      "songList": [
         0,
         4,
         8
@@ -12,8 +12,25 @@
     {
       "id": "3",
       "name": "1my album",
-      "songlist": [
-        1,3,8,9
+      "songList": [
+        1,
+        3,
+        8,
+        9
+      ]
+    },
+    {
+      "id": "6501",
+      "name": "people",
+      "songList": [
+        3
+      ]
+    },
+    {
+      "id": "02d2",
+      "name": "equal",
+      "songList": [
+        3
       ]
     }
   ]

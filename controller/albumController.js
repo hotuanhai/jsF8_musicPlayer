@@ -34,3 +34,19 @@ function deleteAlbum(id){
         })
 }
 export {deleteAlbum}
+
+function createAlbum(data,callback){
+    var options = {
+        method : `POST`,
+        body: JSON.stringify(data),
+        headers: {
+            "Content-Type": "application/json",
+          }
+    }
+    fetch(albumApi,options)
+        .then(function(res){
+            return res.json()
+        })
+        .then(callback)
+}
+export {createAlbum}

@@ -1,6 +1,8 @@
 import songs from './assets/songsList/songs.js'
 import generateRandomArray , {shuffleArray} from './utils.js'
-import getAllAlbums,{getAllAlbumsName,deleteAlbum} from './controller/albumController.js'
+import getAllAlbums,
+    {getAllAlbumsName,deleteAlbum, createAlbum} 
+    from './controller/albumController.js'
 
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
@@ -31,6 +33,7 @@ const iconVolumeHigh = $('.fa-volume-high')
 const albumMenuBtn = $('.btn-albumMenu')
 const albumList = $('.albumList')
 const albumOption = $('.albumOption')
+const albumToAdd = $('.albumToAdd')
 
 const app = {
     curIndex: 0,
@@ -85,6 +88,60 @@ const app = {
             `
         })
         albumList.innerHTML += htmls.join('')
+    },
+    renderAlbumsToAdd:async function(songIndex){
+        songIndex = Number(songIndex)
+        const albums = await getAllAlbums()    
+        const htmls = albums.map((album,index) => {
+            const isChecked = album.songList.includes(songIndex) ? 'checked' : ''
+            return`
+                <div class="albumAndCheck">
+                    <input type="checkbox" id="${album.name}" ${isChecked}>
+                    <div> ${album.name} </div>
+                </div>
+            `
+        })
+        albumToAdd.innerHTML = htmls.join('')
+        const html = `
+                <div class="albumAndCheck ">
+                    <button id="addAlbumBtn">Add</button>
+                    <input type="text" id="newAlbum" placeholder="New album">
+                </div>
+            `
+        albumToAdd.innerHTML += html
+        document.querySelector('#addAlbumBtn').onclick = function() {
+            const newAlbumName = document.getElementById('newAlbum').value;
+            console.log("New album name:", newAlbumName);
+            const existingAlbum = albums.find(album => album.name.toLowerCase() === newAlbumName.toLowerCase())
+            if (existingAlbum) {
+                alert('Album already exists');
+                return; // Exit function if album exists
+            }
+            var data = {
+                name: newAlbumName,
+                songList: [songIndex]
+            }
+            createAlbum(data,async function(newData){
+                const albums = await getAllAlbums()    
+                const htmls = albums.map((album,index) => {
+                    const isChecked = album.songList.includes(songIndex) ? 'checked' : ''
+                    return`
+                        <div class="albumAndCheck ">
+                            <input type="checkbox" id="${album.name}" ${isChecked}>
+                            <div> ${album.name} </div>
+                        </div>
+                    `
+                })
+                albumToAdd.innerHTML = htmls.join('')
+                const html = `
+                        <div class="albumAndCheck">
+                            <button id="addAlbumBtn">Add</button>
+                            <input type="text" id="newAlbum" placeholder="New album">
+                        </div>
+                    `
+                albumToAdd.innerHTML += html
+            })
+        }
     },
     defineProperties: function(){
         Object.defineProperty(this,'curSong',{
@@ -252,10 +309,43 @@ const app = {
                     audio.play()
                 }
                 if(e.target.closest('.option')){
+                    const optionSongNode = e.target.closest('.song')
+                    _this.renderAlbumsToAdd(optionSongNode.getAttribute('data-index'))
+                    albumToAdd.classList.add('active')
+                    let element = optionSongNode
+                    let topPosition = 0
+                    // Traverse up the DOM tree to accumulate the offsetTop values
+                    while (element) {
+                        topPosition += element.offsetTop
+                        element = element.offsetParent
+                    }
+                    const songLeft = optionSongNode.getBoundingClientRect().left
+                    albumToAdd.style.top = `${topPosition - 440}px`
+                    albumToAdd.style.left = `${songLeft +40}px`
                 }
             }
         }
+        //remove focus when scroll or click
+        document.addEventListener('click', function(e) {
+            const isClickInsideAlbumToAdd = albumToAdd.contains(e.target)
+            const isClickInsideOption = e.target.closest('.option')
+            if (!isClickInsideAlbumToAdd && !isClickInsideOption) {
+                albumToAdd.classList.remove('active')
+            }
+        })
+        document.addEventListener('scroll', function() {
+            albumToAdd.classList.remove('active')
+        })
+        albumToAdd.onclick = function(e){
+            const albumAndCheckDiv = e.target.closest('.albumAndCheck');
+            const containsAddButton = albumAndCheckDiv && albumAndCheckDiv.querySelector('#addAlbumBtn');
 
+            if (albumAndCheckDiv && !containsAddButton) {
+                const albumId = albumAndCheckDiv.querySelector('input[type="checkbox"]').id;
+                console.log("Album ID:", albumId);
+            }
+        }
+        
         //handle volume
         volumeBtn.onclick = function(){
             volumeBarContainer.classList.add('active')
@@ -267,9 +357,9 @@ const app = {
         //     volumeBarContainer.classList.remove('active')
         // }
         document.addEventListener('click', function(e) {
-            const isClickInside = volumeBtn.contains(e.target) || volumeBarContainer.contains(e.target);
+            const isClickInside = volumeBtn.contains(e.target) || volumeBarContainer.contains(e.target)
             if (!isClickInside) {
-                volumeBarContainer.classList.remove('active');
+                volumeBarContainer.classList.remove('active')
             }
         })
         document.addEventListener('scroll', function(){
@@ -415,8 +505,8 @@ const app = {
                 this.curIndex = 0
             }
         }else{
+            //handle next song of an album
             let albumIndex = this.curAlbumList.indexOf(this.curIndex)
-            console.log(albumIndex,this.curIndex,this.curAlbumList)
             if(albumIndex >= this.curAlbumList.length - 1){
                 this.curIndex = this.curAlbumList[0]
             }else{
@@ -479,7 +569,7 @@ const app = {
             const albums = await getAllAlbums()
             const albumToChose = albums.find(album => album.name === name)
             if(albumToChose){
-                this.curAlbumList = albumToChose.songlist
+                this.curAlbumList = albumToChose.songList
                 this.curAlbumName = name
                 this.curIndex = this.curAlbumList[0]
             }else{
