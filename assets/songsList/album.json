@@ -20,16 +20,18 @@
       ]
     },
     {
-      "id": "6501",
       "name": "people",
       "songList": [
-        3
-      ]
+        3,
+        5
+      ],
+      "id": "6501"
     },
     {
       "name": "plague",
       "songList": [
-        8
+        8,
+        5
       ],
       "id": "c6c1"
     }

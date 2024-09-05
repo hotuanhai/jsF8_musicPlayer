@@ -121,12 +121,7 @@ const app = {
                 audio.volume = value;
                 this.setConfig('volume', value);
             }
-        })//,
-        // Object.defineProperty(this, 'albumsName', {
-        //     get: function() {
-        //         return getAllAlbumsName().then(names => names);
-        //     }
-        // })
+        })
     },
     handleEvents: function(){
         const _this = this
@@ -521,6 +516,8 @@ const app = {
         this.volume = this.config.volume ? this.config.volume : 0.05
         volumeBar.value = this.volume * 100
         this.loadCurVolumeIcon()
+        let name = this.config.curAlbumName ? this.config.curAlbumName : 'All song'
+        this.handleChosingAlbum(name)
 
         //set config
         randomBtn.classList.toggle('active',this.isRandom)
@@ -599,7 +596,10 @@ const app = {
             if(albumToChose){
                 this.curAlbumList = albumToChose.songList
                 this.curAlbumName = name
-                this.curIndex = this.curAlbumList[0]
+                if (!this.curAlbumList.includes(this.curIndex)) {
+                    this.curIndex = this.curAlbumList[0];
+                }
+                this.setConfig('curAlbumName',name)
             }else{
                 this.curAlbumList = []
                 this.curAlbumName = 'All song'
