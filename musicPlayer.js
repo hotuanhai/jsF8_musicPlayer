@@ -53,7 +53,9 @@ const app = {
         localStorage.setItem(PLAYER_STORAGE_KEY,JSON.stringify(this.config))
     },
     render: function(){
-        // let i = this.curAlbumList.length !== 0 ? this.curAlbumList[0] : 0
+        // render all songs in an album
+        // Map through all the songs. If albumList contains a song, render it
+        //data-index: index of a song 
         const htmls = this.songs.map((song,index) => {
             if(this.curAlbumList.length === 0 || this.curAlbumList.includes(index)){
                 return`
@@ -89,6 +91,7 @@ const app = {
         albumList.innerHTML += htmls.join('')
     },
     renderAlbumsToAdd:async function(songIndex){
+        // Render all albums and indicate whether each album contains the current song
         const init = $('.AAC_addAlbum')
         songIndex = Number(songIndex)
         const albums = await getAllAlbums()    
@@ -118,8 +121,8 @@ const app = {
                 return audio.volume
             },
             set: function(value) {
-                audio.volume = value;
-                this.setConfig('volume', value);
+                audio.volume = value
+                this.setConfig('volume', value)
             }
         })
     },
@@ -176,16 +179,18 @@ const app = {
         //tua
         //isSeeking to handle confict of oninput-onchange and ontimeupdate
         progress.oninput = function(e) {
-            _this.isSeeking = true; 
+            _this.isSeeking = true
         }
         progress.onchange = function(e) {
-            const seekTime = e.target.value / 100 * audio.duration;
-            audio.currentTime = seekTime;
-            _this.isSeeking = false; // 
+            const seekTime = e.target.value / 100 * audio.duration
+            audio.currentTime = seekTime
+            _this.isSeeking = false// 
         }
         
         //handle next/prev btn
         nextBtn.onclick = function(){
+            //randomArr: shuffled curAlbumList
+            //randomArrCurIndex: index of randomArr 
             if(_this.isRandom && _this.curAlbumName == 'All song'){
                 if(_this.randomArrCurIndex === (_this.songs.length - 1)){
                     _this.randomArrCurIndex = 0
@@ -235,7 +240,7 @@ const app = {
 
             //reset the random songs list if randomBtn is double clicked   
             if(!_this.isRepeat){_this.randomArr = []}
-            //update state in local storage
+            
             _this.setConfig('isRandom',_this.isRandom)
         }
 
@@ -245,7 +250,6 @@ const app = {
             _this.isRepeat = !_this.isRepeat
             repeatBtn.classList.toggle('active',_this.isRepeat)
 
-            //update state in local storage
             _this.setConfig('isRepeat',_this.isRepeat)
         }
         //next song when finish
@@ -350,8 +354,8 @@ const app = {
         })
 
         volumeBar.oninput = function(e) {
-            _this.volume = e.target.value / 100; 
-            //set the volume to config
+            _this.volume = e.target.value / 100
+
             _this.setConfig('volume',_this.volume)
             //set the icon of volume
             _this.loadCurVolumeIcon()
@@ -376,6 +380,7 @@ const app = {
         albumList.onclick = function(e) {
             const album = e.target.closest('.album')
             if (album) {
+                // fix the css
                 albumOption.classList.add(`active`) 
                 albumOption.setAttribute('parent', album.innerText)
                 const albumBottom = album.getBoundingClientRect().bottom
@@ -388,7 +393,7 @@ const app = {
             }
         }
         albumOption.onclick = function(e){
-            //console.log(albumOption.getAttribute('parent'))
+            //getAttribute('parent'): parent contain the index of song that clicked albumOption.onclick
             if(e.target.innerText === 'Chọn album'){        
                 _this.handleChosingAlbum(albumOption.getAttribute('parent'))
             }else if(e.target.innerText === 'Xóa album'){
@@ -401,20 +406,21 @@ const app = {
                 albumList.classList.remove('active')
                 albumOption.classList.remove('active') 
             }
-        });
+        })
         document.addEventListener('scroll', function() {
             albumList.classList.remove('active')
             albumOption.classList.remove('active') 
         })
     },
-    handleAddUpdateAlbum: function(songIndex,albums){      
+    handleAddUpdateAlbum: function(songIndex,albums){        
         const addAlbumBtn = $('#addAlbumBtn')
         addAlbumBtn.onclick = function() {
             const newAlbumName = document.getElementById('newAlbum').value
             const existingAlbum = albums.find(album => album.name.toLowerCase() === newAlbumName.toLowerCase())
+            //if newAlbumName already exists or empty, wont create new album
             if (existingAlbum) {
                 alert('Album already exists')
-                return; // Exit function if album exists
+                return 
             }
             if(newAlbumName.trim() == ""){
                 alert("The album name cannot be empty.")
@@ -456,12 +462,11 @@ const app = {
             // see element hidden by dashboard
             const dashboardBottom = dashboard.getBoundingClientRect().bottom
             const activeSongTop = $('.song.active').getBoundingClientRect().bottom - $('.song.active').offsetHeight
-
+            //handle if dashboard cover the active song
             if(activeSongTop < dashboardBottom){
                window.scrollBy({
                     behavior: "smooth",
-                    top:- dashboardBottom + activeSongTop - 200 ,
-                    
+                    top:- dashboardBottom + activeSongTop - 200 ,                  
                 })
             }
         },50)
@@ -482,7 +487,6 @@ const app = {
             newActive.classList.add('active')
         }
 
-        //set the current song to config
         this.setConfig('curIndex',this.curIndex)
         
         //scroll To Active Song : scroll into view
@@ -583,7 +587,7 @@ const app = {
         const albums = await getAllAlbums()
         const albumToDelete = albums.find(album => album.name === name)
         if (albumToDelete) {
-            const albumId = albumToDelete.id;
+            const albumId = albumToDelete.id
             deleteAlbum(albumId)
         }else{
             alert('Không thể xóa mọi bài hát')
@@ -597,8 +601,9 @@ const app = {
                 this.curAlbumList = albumToChose.songList
                 this.curAlbumName = name
                 if (!this.curAlbumList.includes(this.curIndex)) {
-                    this.curIndex = this.curAlbumList[0];
+                    this.curIndex = this.curAlbumList[0]
                 }
+
                 this.setConfig('curAlbumName',name)
             }else{
                 this.curAlbumList = []
