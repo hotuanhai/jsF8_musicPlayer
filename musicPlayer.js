@@ -1,7 +1,7 @@
 import songs from './assets/songsList/songs.js'
 import generateRandomArray , {shuffleArray} from './utils.js'
 import getAllAlbums,
-    {getAllAlbumsName,deleteAlbum, createAlbum} 
+    {getAllAlbumsName,deleteAlbum, createAlbum, updateAlbum, getAlbumByName} 
     from './controller/albumController.js'
 
 const $ = document.querySelector.bind(document)
@@ -69,8 +69,7 @@ const app = {
                         </div>
                     </div>
                 `
-            }
-            
+            }           
         })
         playlist.innerHTML = htmls.join('')
     },
@@ -90,58 +89,23 @@ const app = {
         albumList.innerHTML += htmls.join('')
     },
     renderAlbumsToAdd:async function(songIndex){
+        const init = $('.AAC_addAlbum')
         songIndex = Number(songIndex)
         const albums = await getAllAlbums()    
         const htmls = albums.map((album,index) => {
             const isChecked = album.songList.includes(songIndex) ? 'checked' : ''
             return`
                 <div class="albumAndCheck">
-                    <input type="checkbox" id="${album.name}" ${isChecked}>
+                    <input type="checkbox" id="${album.name}" ${isChecked} songIndex="${songIndex}">
                     <div> ${album.name} </div>
                 </div>
             `
         })
         albumToAdd.innerHTML = htmls.join('')
-        const html = `
-                <div class="albumAndCheck ">
-                    <button id="addAlbumBtn">Add</button>
-                    <input type="text" id="newAlbum" placeholder="New album">
-                </div>
-            `
-        albumToAdd.innerHTML += html
-        document.querySelector('#addAlbumBtn').onclick = function() {
-            const newAlbumName = document.getElementById('newAlbum').value;
-            console.log("New album name:", newAlbumName);
-            const existingAlbum = albums.find(album => album.name.toLowerCase() === newAlbumName.toLowerCase())
-            if (existingAlbum) {
-                alert('Album already exists');
-                return; // Exit function if album exists
-            }
-            var data = {
-                name: newAlbumName,
-                songList: [songIndex]
-            }
-            createAlbum(data,async function(newData){
-                const albums = await getAllAlbums()    
-                const htmls = albums.map((album,index) => {
-                    const isChecked = album.songList.includes(songIndex) ? 'checked' : ''
-                    return`
-                        <div class="albumAndCheck ">
-                            <input type="checkbox" id="${album.name}" ${isChecked}>
-                            <div> ${album.name} </div>
-                        </div>
-                    `
-                })
-                albumToAdd.innerHTML = htmls.join('')
-                const html = `
-                        <div class="albumAndCheck">
-                            <button id="addAlbumBtn">Add</button>
-                            <input type="text" id="newAlbum" placeholder="New album">
-                        </div>
-                    `
-                albumToAdd.innerHTML += html
-            })
-        }
+        albumToAdd.innerHTML += init.outerHTML
+        // document.querySelector('#addAlbumBtn')
+        this.handleAddUpdateAlbum(songIndex,albums)
+        
     },
     defineProperties: function(){
         Object.defineProperty(this,'curSong',{
@@ -337,12 +301,36 @@ const app = {
             albumToAdd.classList.remove('active')
         })
         albumToAdd.onclick = function(e){
-            const albumAndCheckDiv = e.target.closest('.albumAndCheck');
-            const containsAddButton = albumAndCheckDiv && albumAndCheckDiv.querySelector('#addAlbumBtn');
+            const albumAndCheckDiv = e.target.closest('.albumAndCheck')
+            const containsAddButton = albumAndCheckDiv && albumAndCheckDiv.querySelector('#addAlbumBtn')
+            const isCheckbox = e.target.type === 'checkbox'
 
             if (albumAndCheckDiv && !containsAddButton) {
-                const albumId = albumAndCheckDiv.querySelector('input[type="checkbox"]').id;
-                console.log("Album ID:", albumId);
+                const checkbox = albumAndCheckDiv.querySelector('input[type="checkbox"]')
+                const albumName = checkbox.id
+                let songIndex = checkbox.getAttribute('songIndex')
+                songIndex = Number(songIndex)
+
+                //toggle the checkbox
+                if(! isCheckbox)checkbox.checked = !checkbox.checked
+
+                getAlbumByName(albumName,function(album){                  
+                    let data ={
+                        name: album.name,
+                        songList: [...album.songList]
+                    }
+                    let id = album.id
+
+                    if (checkbox.checked && !data.songList.includes(songIndex)) {
+                        data.songList.push(songIndex)
+                    }else if (!checkbox.checked && data.songList.includes(songIndex)) {
+                        data.songList = data.songList.filter(index => index !== songIndex)
+                    }
+                    console.log(data,id)
+                    updateAlbum(id,data,function(){
+                        _this.renderAlbumsToAdd(songIndex)
+                    })
+                })
             }
         }
         
@@ -423,6 +411,46 @@ const app = {
             albumList.classList.remove('active')
             albumOption.classList.remove('active') 
         })
+    },
+    handleAddUpdateAlbum: function(songIndex,albums){      
+        const addAlbumBtn = $('#addAlbumBtn')
+        addAlbumBtn.onclick = function() {
+            const newAlbumName = document.getElementById('newAlbum').value
+            const existingAlbum = albums.find(album => album.name.toLowerCase() === newAlbumName.toLowerCase())
+            if (existingAlbum) {
+                alert('Album already exists')
+                return; // Exit function if album exists
+            }
+            if(newAlbumName.trim() == ""){
+                alert("The album name cannot be empty.")
+                return
+            }
+            var data = {
+                name: newAlbumName,
+                songList: [songIndex]
+            }
+            createAlbum(data,async function(newData){
+                const albums = await getAllAlbums()    
+                const htmls = albums.map((album,index) => {
+                    const isChecked = album.songList.includes(songIndex) ? 'checked' : ''
+                    return`
+                        <div class="albumAndCheck ">
+                            <input type="checkbox" id="${album.name}" ${isChecked}>
+                            <div> ${album.name} </div>
+                        </div>
+                    `
+                })
+                albumToAdd.innerHTML = htmls.join('')
+                const html = `
+                        <div class="albumAndCheck">
+                            <button id="addAlbumBtn">Add</button>
+                            <input type="text" id="newAlbum" placeholder="New album">
+                        </div>
+                    `
+                albumToAdd.innerHTML += html
+            })
+        }
+        
     },
     scrollToActiveSong: function(){
         setTimeout(()=>{
@@ -592,10 +620,10 @@ const app = {
         //load the state of israndom, isrepeat
         this.loadConfig()
 
-        this.handleEvents()
-        
         this.render()
 
+        this.handleEvents()
+        
         this.loadCurSong()    
     }
 }

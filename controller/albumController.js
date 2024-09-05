@@ -50,3 +50,31 @@ function createAlbum(data,callback){
         .then(callback)
 }
 export {createAlbum}
+
+function updateAlbum(id, data, callback) {
+    var options = {
+        method: 'PUT',
+        body: JSON.stringify(data),
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
+
+    fetch(`${albumApi}/${id}`, options)
+        .then(function (res) {
+            return res.json()
+        })
+        .then(callback)
+}
+
+export { updateAlbum }
+
+function getAlbumByName(name, callback) {
+    getAllAlbums()
+        .then(function (albums) {
+            const album = albums.find(album => album.name === name)
+            callback(album)
+        });
+}
+
+export { getAlbumByName }
